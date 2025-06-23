@@ -16,12 +16,26 @@ CREATE TABLE IF NOT EXISTS event (
 );
 
 CREATE TABLE IF NOT EXISTS registered(
+    id SERIAL PRIMARY KEY,
     email VARCHAR(100) NOT NULL,
-    event_id int NOT NULL,
+    event_id int NOT NULL REFERENCES event(id) ON DELETE CASCADE,
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user_email FOREIGN KEY(event_id) REFERENCES event(id) ON DELETE CASCADE,
-    PRIMARY KEY (email, event_id),
     payment_date TIMESTAMP
+);
+
+CREATE TABLE event_field(
+    id SERIAL PRIMARY KEY,
+    event_id INT NOT NULL REFERENCES event(id) ON DELETE CASCADE,
+    label TEXT NOT NULL,
+    field_type TEXT NOT NULL,
+    is_required BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE event_field_value(
+    id SERIAL PRIMARY KEY,
+    registration_id INT NOT NULL REFERENCES registered(id) ON DELETE CASCADE,
+    event_field_id INT NOT NULL REFERENCES event_field(id) ON DELETE CASCADE,
+    value TEXT NOT NULL
 );
 
 

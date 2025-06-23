@@ -4,6 +4,7 @@ import passport from "passport";
 import bcrypt from "bcrypt";
 import {pool} from "../db"
 import {requireLogin} from "../middleware/auth_middleware"
+import crypto from "crypto"
 
 const app = Router();
 
@@ -94,5 +95,16 @@ app.delete("/profile", requireLogin, async (req, res) => {
     res.status(500).json({ message: "Feil ved sletting", error: err });
   }
 });
+
+// Sjekk om bruker er logget inn
+app.get("/check-auth", requireLogin, (req: Request, res: Response) => {
+    res.json({ loggedIn: true, user: req.user });
+});
+
+
+// @Todo: lag glemt passord funksjon
+
+
+
 
 export default app

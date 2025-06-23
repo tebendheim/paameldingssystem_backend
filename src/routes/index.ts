@@ -3,6 +3,7 @@ import { Router, Request, Response } from "express";
 import usersRouter from "./users";
 import authRouter from "./auth"
 import bcrypt from "bcrypt";
+import eventRoutes from "./events"
 
 
 const router = Router();
@@ -13,6 +14,7 @@ router.get("/", async (req:Request, res:Response) =>{
 })
 router.use("/auth", authRouter)
 router.use("/users", usersRouter);
+router.use("/events", eventRoutes)
 
 router.post("/",async (req:Request, res:Response) => {
     console.log(req.body)
