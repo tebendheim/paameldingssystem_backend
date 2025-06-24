@@ -4,6 +4,7 @@ import usersRouter from "./users";
 import authRouter from "./auth"
 import bcrypt from "bcrypt";
 import eventRoutes from "./events"
+import registrationRoutes from "./registration"
 
 
 const router = Router();
@@ -14,7 +15,8 @@ router.get("/", async (req:Request, res:Response) =>{
 })
 router.use("/auth", authRouter)
 router.use("/users", usersRouter);
-router.use("/events", eventRoutes)
+router.use("/events", eventRoutes);
+router.use("/registration", registrationRoutes);
 
 router.post("/",async (req:Request, res:Response) => {
     console.log(req.body)
