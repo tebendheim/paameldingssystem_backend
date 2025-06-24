@@ -1,0 +1,17 @@
+1. Lag glemt passord funksjon.
+2. Bruker må kunne slette en registrering
+3. bruker må kunne legge inn felter
+4. bruker må kunne se sine egne events
+
+
+GET /api/events/event/:id/fields – returnerer feltene (du har denne).
+
+POST /api/events/event/:id/fields – for å legge til felt.
+
+DELETE /api/events/event/:id/fields/:fieldId 
+
+GET /api/events/:id: returnerer info om eventet.
+
+GET /api/events/:id/fields: returnerer felter for eventet.
+
+GET /api/events/:id/registrations/summary

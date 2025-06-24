@@ -28,7 +28,8 @@ CREATE TABLE event_field(
     event_id INT NOT NULL REFERENCES event(id) ON DELETE CASCADE,
     label TEXT NOT NULL,
     field_type TEXT NOT NULL,
-    is_required BOOLEAN DEFAULT FALSE
+    is_required BOOLEAN DEFAULT FALSE,
+    prioritet INT NOT NULL
 );
 
 CREATE TABLE event_field_value(
@@ -38,6 +39,13 @@ CREATE TABLE event_field_value(
     value TEXT NOT NULL
 );
 
+
+CREATE TABLE IF NOT EXISTS password_reset_token(
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT NOT NULL,
+    expires_at TIMESTAMP NOT NULL
+);
 
 
 -- Sett inn demo-data hvis ønskelig

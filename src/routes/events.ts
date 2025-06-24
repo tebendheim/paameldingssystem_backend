@@ -42,21 +42,6 @@ router.get("/event/:id", async (req, res) => {
     }
 });
 
-router.get("/event/:id/fields", async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query(
-      "SELECT * FROM event_field WHERE event_id = $1",
-      [id]
-    );
-
-    // Hvis ingen felter finnes, send tom liste
-    res.status(200).json(result.rows); // result.rows vil være [] hvis ingen felter finnes
-  } catch (err) {
-    console.error("Feil ved henting av felt:", err);
-    res.status(500).json({ message: "Noe gikk galt" });
-  }
-});
 
 
 

@@ -29,6 +29,7 @@
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "pg": "^8.16.2",
+    "react-beautiful-dnd": "^13.1.1",
     "resend": "^4.6.0"
   }
 }
