@@ -1,3 +1,5 @@
+CREATE TYPE field_input_type AS ENUM ('text', 'number', 'select');
+
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
@@ -27,10 +29,25 @@ CREATE TABLE event_field(
     id SERIAL PRIMARY KEY,
     event_id INT NOT NULL REFERENCES event(id) ON DELETE CASCADE,
     label TEXT NOT NULL,
-    field_type TEXT NOT NULL,
+    field_type field_input_type NOT NULL,
     is_required BOOLEAN DEFAULT FALSE,
-    prioritet INT NOT NULL
+    rekkefoelge INT DEFAULT 0,
+    CONSTRAINT unique_event_order UNIQUE (event_id, rekkefoelge)
+
 );
+
+CREATE TABLE IF NOT EXISTS field_options(
+  id SERIAL PRIMARY KEY,
+  field_id INTEGER REFERENCES event_field(id) ON DELETE CASCADE,
+  value TEXT NOT NULL
+);
+
+-- CREATE TABLE IF NOT EXISTS field_options_response(
+--   id SERIAL PRIMARY KEY,
+--   option_id INTEGER REFERENCES field_options(id) ON DELETE CASCADE,
+--   registration_id INT NOT NULL REFERENCES registered(id) ON DELETE CASCADE,
+--   value TEXT NOT NULL -- For select er dette en av `field_options.value`
+-- );
 
 CREATE TABLE event_field_value(
     id SERIAL PRIMARY KEY,

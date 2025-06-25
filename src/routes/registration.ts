@@ -6,8 +6,9 @@ import { requireLogin } from "../middleware/auth_middleware";
 const router = Router();
 
 router.post("/:eventId", async (req, res) => {
+  console.log(req.body)
   const { eventId } = req.params;
-  const { email, fieldValues } = req.body;
+  const { email, answers } = req.body;
 
   const client = await pool.connect();
   try {
@@ -21,7 +22,7 @@ router.post("/:eventId", async (req, res) => {
     const registrationId = registrationResult.rows[0].id;
 
     // Lagre feltverdier
-    for (const field of fieldValues) {
+    for (const field of answers) {
       await client.query(
         "INSERT INTO event_field_value (registration_id, event_field_id, value) VALUES ($1, $2, $3)",
         [registrationId, field.event_field_id, field.value]
