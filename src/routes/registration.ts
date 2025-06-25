@@ -8,16 +8,16 @@ const router = Router();
 router.post("/:eventId", async (req, res) => {
   console.log(req.body)
   const { eventId } = req.params;
-  const { email, answers } = req.body;
+  const { email, answers, ticketId } = req.body;
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
     // Lagre registrering
-    const registrationResult = await client.query(
-      "INSERT INTO registered (email, event_id) VALUES ($1, $2) RETURNING id",
-      [email, eventId]
+  const registrationResult = await client.query(
+    "INSERT INTO registered (email, event_id, ticket_id) VALUES ($1, $2, $3) RETURNING id",
+    [email, eventId, ticketId]
     );
     const registrationId = registrationResult.rows[0].id;
 

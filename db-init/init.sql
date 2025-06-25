@@ -1,4 +1,5 @@
 CREATE TYPE field_input_type AS ENUM ('text', 'number', 'select');
+CREATE TYPE status_type AS ENUM ("registered", "approved", "waitlisted")
 
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -14,7 +15,16 @@ CREATE TABLE IF NOT EXISTS event (
     owner_id INT NOT NULL,
     event_date TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_owner FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_owner FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE,
+    is_payed BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- Ny tabell for billetter til eventet
+CREATE TABLE IF NOT EXISTS event_tickets (
+  id SERIAL PRIMARY KEY,
+  event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL, -- f.eks. "Standard", "VIP", "Student"
+  price NUMERIC(10, 2) NOT NULL CHECK (price >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS registered(
@@ -22,7 +32,12 @@ CREATE TABLE IF NOT EXISTS registered(
     email VARCHAR(100) NOT NULL,
     event_id int NOT NULL REFERENCES event(id) ON DELETE CASCADE,
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    payment_date TIMESTAMP
+    ticket_id INTEGER REFERENCES event_tickets(id),
+    payment_date TIMESTAMP,
+    payed_amount REAL DEFAULT 0,
+    registration_status status_type DEFAULT registered.
+    checked_in BOOLEAN NOT NULL DEFAULT FALSE
+    
 );
 
 CREATE TABLE event_field(
@@ -42,12 +57,6 @@ CREATE TABLE IF NOT EXISTS field_options(
   value TEXT NOT NULL
 );
 
--- CREATE TABLE IF NOT EXISTS field_options_response(
---   id SERIAL PRIMARY KEY,
---   option_id INTEGER REFERENCES field_options(id) ON DELETE CASCADE,
---   registration_id INT NOT NULL REFERENCES registered(id) ON DELETE CASCADE,
---   value TEXT NOT NULL -- For select er dette en av `field_options.value`
--- );
 
 CREATE TABLE event_field_value(
     id SERIAL PRIMARY KEY,
@@ -67,5 +76,5 @@ CREATE TABLE IF NOT EXISTS password_reset_token(
 
 -- Sett inn demo-data hvis ønskelig
 INSERT INTO users (username, email,password) VALUES ('testuser', 'test@example.com', '$2b$10$vTibYh0I1uxlAF5Pv9HQ0uQ7nOP2nfJhrQNiqXfL5qEprVR.1Z9Kq');
-INSERT INTO event (name, owner_id,event_date) VALUES ('slingshot', 1, '2025-12-01 18:00:00');
+INSERT INTO event (name, owner_id,event_date, is_payed) VALUES ('slingshot', 1, '2025-12-01 18:00:00', true);
 INSERT INTO registered (email, event_id) VALUES ('tomel@gmail.com', 1);

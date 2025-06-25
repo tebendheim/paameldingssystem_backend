@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { pool } from "../db";
 import { requireLogin } from "../middleware/auth_middleware";
+import TicketRoutes from "./tickets"
 
 const router = Router();
 
@@ -42,7 +43,43 @@ router.get("/event/:id", async (req, res) => {
     }
 });
 
+router.post("/", async (req, res) => {
+  const { name, event_date, tickets } = req.body;
 
+if (tickets && !Array.isArray(tickets)) {
+  res.status(400).json({ error: "Tickets må være en liste hvis det oppgis" });
+  return;
+}
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const eventResult = await client.query(
+      "INSERT INTO events (name, event_date) VALUES ($1, $2) RETURNING id",
+      [name, event_date]
+    );
+    const eventId = eventResult.rows[0].id;
+
+    for (const ticket of tickets) {
+      await client.query(
+        "INSERT INTO event_tickets (event_id, name, price) VALUES ($1, $2, $3)",
+        [eventId, ticket.name, ticket.price]
+      );
+    }
+
+    await client.query("COMMIT");
+
+    res.status(201).json({ message: "Event opprettet", eventId });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error(err);
+    res.status(500).json({ error: "Kunne ikke opprette event" });
+  } finally {
+    client.release();
+  }
+});
 
 
 router.get("/event/:id/registrations", requireLogin, async (req, res) => {
@@ -117,6 +154,8 @@ router.get("/event/:id/registrations", requireLogin, async (req, res) => {
     res.status(500).json({ message: "Noe gikk galt" });
   }
 });
+
+router.use("/event/tickets",  TicketRoutes)
 
 
 
