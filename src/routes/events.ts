@@ -155,7 +155,7 @@ router.get("/event/:id/registrations", requireLogin, async (req, res) => {
   }
 });
 
-router.use("/event/tickets",  TicketRoutes)
+router.use("/tickets",  TicketRoutes)
 
 
 

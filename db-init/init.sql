@@ -1,5 +1,5 @@
 CREATE TYPE field_input_type AS ENUM ('text', 'number', 'select');
-CREATE TYPE status_type AS ENUM ("registered", "approved", "waitlisted")
+CREATE TYPE status_type AS ENUM ('registered', 'approved', 'waitlisted');
 
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -22,22 +22,21 @@ CREATE TABLE IF NOT EXISTS event (
 -- Ny tabell for billetter til eventet
 CREATE TABLE IF NOT EXISTS event_tickets (
   id SERIAL PRIMARY KEY,
-  event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-  name VARCHAR(255) NOT NULL, -- f.eks. "Standard", "VIP", "Student"
-  price NUMERIC(10, 2) NOT NULL CHECK (price >= 0)
+  event_id INT NOT NULL REFERENCES event(id) ON DELETE CASCADE,
+  name TEXT, -- f.eks. "Standard", "VIP", "Student"
+  price DECIMAL(10, 2) NOT NULL CHECK (price >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS registered(
     id SERIAL PRIMARY KEY,
     email VARCHAR(100) NOT NULL,
-    event_id int NOT NULL REFERENCES event(id) ON DELETE CASCADE,
+    event_id INT NOT NULL REFERENCES event(id) ON DELETE CASCADE,
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ticket_id INTEGER REFERENCES event_tickets(id),
+    ticket_id INT REFERENCES event_tickets(id),
     payment_date TIMESTAMP,
     payed_amount REAL DEFAULT 0,
-    registration_status status_type DEFAULT registered.
+    registration_status status_type DEFAULT 'registered',
     checked_in BOOLEAN NOT NULL DEFAULT FALSE
-    
 );
 
 CREATE TABLE event_field(
@@ -45,7 +44,7 @@ CREATE TABLE event_field(
     event_id INT NOT NULL REFERENCES event(id) ON DELETE CASCADE,
     label TEXT NOT NULL,
     field_type field_input_type NOT NULL,
-    is_required BOOLEAN DEFAULT FALSE,
+    is_required BOOLEAN NOT NULL DEFAULT FALSE,
     rekkefoelge INT DEFAULT 0,
     CONSTRAINT unique_event_order UNIQUE (event_id, rekkefoelge)
 
@@ -53,7 +52,7 @@ CREATE TABLE event_field(
 
 CREATE TABLE IF NOT EXISTS field_options(
   id SERIAL PRIMARY KEY,
-  field_id INTEGER REFERENCES event_field(id) ON DELETE CASCADE,
+  field_id INT REFERENCES event_field(id) ON DELETE CASCADE,
   value TEXT NOT NULL
 );
 
