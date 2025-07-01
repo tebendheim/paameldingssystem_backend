@@ -9,7 +9,13 @@ router.get("/my-events", requireLogin, async (req, res) => {
   try {
     const userId = req.user?.id;
     const result = await pool.query(
-      "SELECT * FROM event WHERE owner_id = $1 ORDER BY created_at DESC",
+      `
+      SELECT DISTINCT e.*
+      FROM event e
+      LEFT JOIN permissions p ON e.id = p.event_id AND p.user_id = $1
+      WHERE e.owner_id = $1 OR p.user_id = $1
+      ORDER BY e.created_at DESC
+      `,
       [userId]
     );
     res.json(result.rows);

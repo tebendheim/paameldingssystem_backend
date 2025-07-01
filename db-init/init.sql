@@ -1,5 +1,7 @@
 CREATE TYPE field_input_type AS ENUM ('text', 'number', 'select');
 CREATE TYPE status_type AS ENUM ('registered', 'approved', 'waitlisted');
+CREATE TYPE permission_type AS ENUM ('READ', 'EDIT');
+CREATE TYPE permission_place_type AS ENUM ('registered', 'event_settings', 'accounting', 'reports');
 
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -17,6 +19,14 @@ CREATE TABLE IF NOT EXISTS event (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_owner FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE,
     is_payed BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS permissions(
+    event_id INT NOT NULL REFERENCES event(id),
+    user_id INT NOT NULL REFERENCES users(id),
+    permission_level permission_type NOT NULL DEFAULT 'READ',
+    permission permission_place_type NOT NULL,
+    PRIMARY KEY (event_id, user_id, permission)
 );
 
 -- Ny tabell for billetter til eventet
