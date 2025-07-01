@@ -2,13 +2,19 @@
 2. Bruker må kunne slette en registrering
 3. bruker må kunne legge inn felter
 4. bruker må kunne se sine egne events
+5. Sjekke at man ikke kan endre event id og se andres eventer.
+6. det må være mulig å bytte eier
+
+1. fortsettelse: har lagt til for å kunne ha permissions. Må nå kunne legge til en bruker til permissions. og må deretter bruke forskjellige auth-middleware for å 
+sjekke hvordan type tilgang bruker har. Start her er er å vise fram alle event som bruker enten er eier av eller har tilganger til. har startet på det.
+
+2. sette opp ett eller annet form for test system for å sjekke hvordan backend fungerer ved test. dette bør gjøres før jeg fortsetter.
 
 
-GET /api/events/event/:id/fields – returnerer feltene (du har denne).
 
-POST /api/events/event/:id/fields – for å legge til felt.
 
-DELETE /api/events/event/:id/fields/:fieldId 
+
+
 
 GET /api/events/:id: returnerer info om eventet.
 
