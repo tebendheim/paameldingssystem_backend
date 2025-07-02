@@ -2,6 +2,7 @@ import { Router } from "express";
 import { pool } from "../db";
 import { requireLogin, requireReadAccess, requireEditAccess } from "../middleware/auth_middleware";
 import TicketRoutes from "./tickets"
+import User from "../User"
 
 const router = Router();
 
@@ -90,7 +91,11 @@ if (tickets && !Array.isArray(tickets)) {
 
 router.get("/event/:eventId/registrations", requireReadAccess("registrations"), async (req, res) => {
   const { eventId } = req.params;
+  const user = req.user as User;
   const userId = req.user?.id;
+
+  console.log("req.user =", user);
+
 
   try {
     // Sjekk at brukeren eier arrangementet
