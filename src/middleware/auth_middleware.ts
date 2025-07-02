@@ -6,18 +6,20 @@ const checkPermission = (place: string, level: "READ" | "EDIT") => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.id;
     const eventId = parseInt(
-      req.params.eventId || req.body.eventId || req.query.eventId
-    );
+  req.params.eventId || req.body.eventId || req.query.eventId
+);
 
     if (!userId || isNaN(eventId)) {
       res.status(400).json({ message: "Mangler bruker-ID eller event-ID" });
+      console.log(userId)
+      console.log(eventId)
       return;
     }
 
     try {
       // Eier har alltid full tilgang
       const ownerCheck = await pool.query(
-        "SELECT 1 FROM event WHERE id = $1 AND owner_id = $2",
+        "SELECT * FROM event WHERE id = $1 AND owner_id = $2",
         [eventId, userId]
       );
       if ((ownerCheck.rowCount ?? 0) > 0) {
@@ -53,7 +55,7 @@ const checkPermission = (place: string, level: "READ" | "EDIT") => {
       return;
     } catch (err) {
       console.error("Feil ved tilgangssjekk:", err);
-      res.status(500).json({ message: "Intern serverfeil" });
+      res.status(500).json({ message: "Intern serverfeil middleware" });
       return;
     }
   };

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { pool } from "../db";
-import { requireLogin } from "../middleware/auth_middleware";
+import { requireLogin, requireReadAccess, requireEditAccess } from "../middleware/auth_middleware";
 import TicketRoutes from "./tickets"
 
 const router = Router();
@@ -88,13 +88,13 @@ if (tickets && !Array.isArray(tickets)) {
 });
 
 
-router.get("/event/:id/registrations", requireLogin, async (req, res) => {
-  const { id } = req.params;
+router.get("/event/:eventId/registrations", requireReadAccess("registrations"), async (req, res) => {
+  const { eventId } = req.params;
   const userId = req.user?.id;
 
   try {
     // Sjekk at brukeren eier arrangementet
-    const eventResult = await pool.query("SELECT * FROM event WHERE id = $1", [id]);
+    const eventResult = await pool.query("SELECT * FROM event WHERE id = $1", [eventId]);
     if (eventResult.rows.length === 0) {
       res.status(404).json({ message: "Event ikke funnet" });
       return
@@ -125,7 +125,7 @@ router.get("/event/:id/registrations", requireLogin, async (req, res) => {
       WHERE r.event_id = $1
       ORDER BY r.registration_date DESC
       `,
-      [id]
+      [eventId]
     );
 
     const structured = registrations.rows.reduce((acc, row) => {
