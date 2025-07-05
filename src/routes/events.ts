@@ -36,9 +36,12 @@ router.get("/events", async (req,res) => {
 });
 
 router.get("/event/:id", async (req, res) => {
-    const {id} = req.params;
+    const id = req.params.id;
     try{
         const result = await pool.query("SELECT * FROM event WHERE id = $1", [id]);
+
+        // SKAL SLETTE CONSOLE
+        console.log(result)
         if (result.rows.length === 0){
             res.status(404).json({message: "Event ikke funnet"})
             return;
@@ -94,8 +97,6 @@ router.get("/event/:eventId/registrations", requireReadAccess("registrations"), 
   const user = req.user as User;
   const userId = user.id;
 
-  console.log("req.user =", user);
-
 
   try {
     // Sjekk at brukeren eier arrangementet
@@ -133,7 +134,6 @@ router.get("/event/:eventId/registrations", requireReadAccess("registrations"), 
       [eventId]
     );
 
-    console.log(registrations)
 
     const structured = registrations.rows.reduce((acc, row) => {
       const regId = row.registration_id;

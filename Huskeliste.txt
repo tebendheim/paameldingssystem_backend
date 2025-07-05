@@ -21,3 +21,28 @@ GET /api/events/:id: returnerer info om eventet.
 GET /api/events/:id/fields: returnerer felter for eventet.
 
 GET /api/events/:id/registrations/summary
+
+
+MockClient vs direkte:
+
+Når ett endepunkt oppretter en klient først og deretter kjører flere queries. Spesielt om man benytter transaksjoner
+
+ const mockClient = {
+    query: jest.fn(),
+    release: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (pool.connect as jest.Mock).mockResolvedValue(mockClient);
+  });  it("should insert event and tickets, then commit transaction", async () => { 
+    mockClient.query
+      .mockResolvedValueOnce(undefined) // BEGIN
+      .mockResolvedValueOnce({ rows: [{ id: 123 }] }) // INSERT INTO events
+      .mockResolvedValueOnce(undefined) // INSERT ticket 1
+      .mockResolvedValueOnce(undefined) // INSERT ticket 2
+      .mockResolvedValueOnce(undefined); // COMMIT
+
+Hvis man bare har en enkelt query i endepunktet kan man heller bruke denne løsningen
+
+ (pool.query as jest.Mock).mockResolvedValueOnce({.
