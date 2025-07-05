@@ -133,6 +133,8 @@ router.get("/event/:eventId/registrations", requireReadAccess("registrations"), 
       [eventId]
     );
 
+    console.log(registrations)
+
     const structured = registrations.rows.reduce((acc, row) => {
       const regId = row.registration_id;
       if (!acc[regId]) {
