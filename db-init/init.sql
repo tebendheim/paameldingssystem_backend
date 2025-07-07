@@ -6,6 +6,8 @@ CREATE TYPE permission_place_type AS ENUM ('registrations', 'event_settings', 'a
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
+  firstName TEXT NOT NULL,
+  lastName TEXT NOT NULL,
   password VARCHAR(255) NOT NULL,
   email VARCHAR(100) UNIQUE NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -25,7 +27,7 @@ CREATE TABLE IF NOT EXISTS permissions(
     event_id INT NOT NULL REFERENCES event(id),
     user_id INT NOT NULL REFERENCES users(id),
     permission_level permission_type NOT NULL DEFAULT 'READ',
-    permission permission_place_type NOT NULL,
+    permission_place permission_place_type NOT NULL,
     PRIMARY KEY (event_id, user_id, permission)
 );
 
@@ -84,6 +86,6 @@ CREATE TABLE IF NOT EXISTS password_reset_token(
 
 
 -- Sett inn demo-data hvis ønskelig
-INSERT INTO users (username, email,password) VALUES ('testuser', 'test@example.com', '$2b$10$vTibYh0I1uxlAF5Pv9HQ0uQ7nOP2nfJhrQNiqXfL5qEprVR.1Z9Kq');
+INSERT INTO users (username, email,password, firstName, lastName) VALUES ('testuser', 'test@example.com', '$2b$10$vTibYh0I1uxlAF5Pv9HQ0uQ7nOP2nfJhrQNiqXfL5qEprVR.1Z9Kq', "tom", "bendhe");
 INSERT INTO event (name, owner_id,event_date, is_payed) VALUES ('slingshot', 1, '2025-12-01 18:00:00', true);
 INSERT INTO registered (email, event_id) VALUES ('tomel@gmail.com', 1);

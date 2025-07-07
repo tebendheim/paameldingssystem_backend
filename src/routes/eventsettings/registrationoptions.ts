@@ -42,7 +42,6 @@ const router = Router();
 //   }
 // });
 router.put("/:eventId/:fieldId", requireEditAccess("event_settings"), async (req, res) => {
-  console.log("er i rett rute")
   const { eventId, fieldId } = req.params;
   const updates = req.body;
 
