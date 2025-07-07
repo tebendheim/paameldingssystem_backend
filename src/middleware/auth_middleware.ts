@@ -1,3 +1,5 @@
+// src/middleware/aut_middleware
+
 import { Request, Response, NextFunction } from "express";
 import { pool } from "../db"; // Juster om nødvendig
 
@@ -11,8 +13,6 @@ const checkPermission = (place: string, level: "READ" | "EDIT") => {
 
     if (!userId || isNaN(eventId)) {
       res.status(400).json({ message: "Mangler bruker-ID eller event-ID" });
-      console.log(userId)
-      console.log(eventId)
       return;
     }
 
@@ -42,8 +42,14 @@ const checkPermission = (place: string, level: "READ" | "EDIT") => {
       }
 
       if (level === "READ") {
-        next();
-        return;
+        // Tillat hvis permission er READ eller EDIT
+        if (permission === "READ" || permission === "EDIT") {
+          next();
+          return;
+        } else {
+          res.status(403).json({ message: "Ingen lesetilgang" });
+          return;
+        }
       }
 
       if (level === "EDIT" && permission === "EDIT") {
@@ -54,7 +60,7 @@ const checkPermission = (place: string, level: "READ" | "EDIT") => {
       res.status(403).json({ message: "Manglende skrivetilgang" });
       return;
     } catch (err) {
-      console.error("Feil ved tilgangssjekk:", err);
+      //console.error("Feil ved tilgangssjekk:", err); //SKAL AVKOMMENTERES I PROD
       res.status(500).json({ message: "Intern serverfeil middleware" });
       return;
     }

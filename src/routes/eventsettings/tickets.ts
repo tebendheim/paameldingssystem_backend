@@ -42,8 +42,8 @@
 
 
 import Router from "express";
-import { pool } from "../db";
-import { requireLogin } from "../middleware/auth_middleware";
+import { pool } from "../../db";
+import { requireLogin } from "../../middleware/auth_middleware";
 
 const router = Router();
 

@@ -1,7 +1,7 @@
 CREATE TYPE field_input_type AS ENUM ('text', 'number', 'select');
 CREATE TYPE status_type AS ENUM ('registered', 'approved', 'waitlisted');
 CREATE TYPE permission_type AS ENUM ('READ', 'EDIT');
-CREATE TYPE permission_place_type AS ENUM ('registered', 'event_settings', 'accounting', 'reports');
+CREATE TYPE permission_place_type AS ENUM ('registrations', 'event_settings', 'accounting', 'reports', 'useradmin');
 
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,

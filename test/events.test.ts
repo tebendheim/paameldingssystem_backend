@@ -1,9 +1,3 @@
-import request from "supertest";
-import express from "express";
-import router from "../src/routes/events";
-import { pool } from "../src/db";
-import { get } from "http";
-
 jest.mock("../src/db", () => {
   const queryMock = jest.fn();
   const releaseMock = jest.fn();
@@ -18,219 +12,206 @@ jest.mock("../src/db", () => {
   };
 });
 
-const app = express();
-app.use(express.json());
+import request from "supertest";
+import express from "express";
+import { pool } from "../src/db";
+import router from "../src/routes/events/events";
+import type { Express } from "express";
 
-// Mock av req.user FØR router
-app.use((req, res, next) => {
-  req.user = {
-    id: 1,
-    email: "test@example.com",
-    username: "testuser",
-    created_at: "2025-01-01T00:00:00Z",
-  };
-  next();
-});
 
-app.use("/api/events", router);
 
-describe("GET /event/:eventId/registrations", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+
+const createTestApp = () => {
+  const app = express();
+  app.use(express.json());
+
+  app.use((req, res, next) => {
+    req.user = {
+      id: 1,
+      email: "test@example.com",
+      username: "testuser",
+      created_at: "2025-01-01T00:00:00Z",
+    };
+    next();
   });
 
-  it("returnerer 200 og registreringer hvis bruker eier eventet", async () => {
-
-    (pool.query as jest.Mock)
-    // 1. Sjekk at bruker eier eventet
-    .mockResolvedValueOnce({
-        rowCount: 1,
-        rows: [{ id: 1, name: "slingshot", owner_id: 1, event_date: "2025-12-01T17:00:00.000Z", created_at: "2025-07-01T17:18:51.136Z", is_payed: true }]
-    })
-    // 2. Hent event fra router
-    .mockResolvedValueOnce({
-        rowCount: 1,
-        rows: [{ id: 1, name: "slingshot", owner_id: 1, event_date: "2025-12-01T17:00:00.000Z", created_at: "2025-07-01T17:18:51.136Z", is_payed: true }]
-    })
-    // 3. Hent registreringer + felt (joinet resultat)
-    .mockResolvedValueOnce({
-        rowCount: 3,
-        rows: [
-        {
-            registration_id: 2,
-            email: "123@213.no",
-            registration_date: "2025-07-05T16:39:33.436Z",
-            payment_date: null,
-            field_id: 1,
-            label: "test",
-            field_type: "select",
-            is_required: true,
-            value: "1"
-        },
-        {
-            registration_id: 2,
-            email: "123@213.no",
-            registration_date: "2025-07-05T16:39:33.436Z",
-            payment_date: null,
-            field_id: 2,
-            label: "a",
-            field_type: "text",
-            is_required: true,
-            value: "asdf"
-        },
-        {
-            registration_id: 1,
-            email: "tomel@gmail.com",
-            registration_date: "2025-07-01T17:18:51.137Z",
-            payment_date: null,
-            field_id: null,
-            label: null,
-            field_type: null,
-            is_required: null,
-            value: null
-        }
-        ]
-    });
-
-        const res = await request(app).get("/api/events/event/123/registrations");
-
-        if (res.status !== 200) {
-        console.log("Feil respons:", res.status, res.body);
-        }
-
-        expect(res.status).toBe(200);
-        expect(res.body.event).toEqual({
-        id: 1,
-        name: "slingshot",
-        owner_id: 1,
-        event_date: "2025-12-01T17:00:00.000Z",
-        created_at: "2025-07-01T17:18:51.136Z",
-        is_payed: true
-        });
-        expect(res.body.totalRegistrations).toBe(2);
-        expect(res.body.registrations).toEqual([
-        {
-            email: "tomel@gmail.com",
-            registration_date: "2025-07-01T17:18:51.137Z",
-            payment_date: null,
-            fields: []
-        },
-        {
-            email: "123@213.no",
-            registration_date: "2025-07-05T16:39:33.436Z",
-            payment_date: null,
-            fields: [
-            { label: "test", value: "1" },
-            { label: "a", value: "asdf" }
-            ]
-        }
-        ]);
-    });
-}); 
+  app.use("/api/events", router);
+  return app;
+};
 
 
-it("returnerer 200 og registreringer hvis bruker har skrivetilgang til eventet", async () => {
-
-  (pool.query as jest.Mock)
-    // 1. Sjekk at bruker IKKE eier eventet
-    .mockResolvedValueOnce({
-      rowCount: 0,
-      rows: []
-    })
-    // 2. Sjekk at bruker har skrivetilgang (permissions)
-    .mockResolvedValueOnce({
-      rowCount: 1,
-      rows: [{ user_id: 2, event_id: 123, can_edit: true }]
-    })
-    // 3. Hent event-data
-    .mockResolvedValueOnce({
-      rowCount: 1,
-      rows: [{
-        id: 1,
-        name: "slingshot",
-        owner_id: 1,
-        event_date: "2025-12-01T17:00:00.000Z",
-        created_at: "2025-07-01T17:18:51.136Z",
-        is_payed: true
-      }]
-    })
-    // 4. Hent registreringer med felt
-    .mockResolvedValueOnce({
-      rowCount: 3,
-      rows: [
-        {
-          registration_id: 2,
-          email: "123@213.no",
-          registration_date: "2025-07-05T16:39:33.436Z",
-          payment_date: null,
-          field_id: 1,
-          label: "test",
-          field_type: "select",
-          is_required: true,
-          value: "1"
-        },
-        {
-          registration_id: 2,
-          email: "123@213.no",
-          registration_date: "2025-07-05T16:39:33.436Z",
-          payment_date: null,
-          field_id: 2,
-          label: "a",
-          field_type: "text",
-          is_required: true,
-          value: "asdf"
-        },
-        {
-          registration_id: 1,
-          email: "tomel@gmail.com",
-          registration_date: "2025-07-01T17:18:51.137Z",
-          payment_date: null,
-          field_id: null,
-          label: null,
-          field_type: null,
-          is_required: null,
-          value: null
-        }
-      ]
-    });
-
-  const res = await request(app).get("/api/events/event/123/registrations");
-
-  if (res.status !== 200) {
-    console.log("Feil respons:", res.status, res.body);
-  }
-
-  expect(res.status).toBe(200);
-  expect(res.body.event).toEqual({
-    id: 1,
-    name: "slingshot",
-    owner_id: 1,
-    event_date: "2025-12-01T17:00:00.000Z",
-    created_at: "2025-07-01T17:18:51.136Z",
-    is_payed: true
-  });
-  expect(res.body.totalRegistrations).toBe(2);
-  expect(res.body.registrations).toEqual([
-    {
-      email: "tomel@gmail.com",
-      registration_date: "2025-07-01T17:18:51.137Z",
-      payment_date: null,
-      fields: []
+describe.each([
+  {
+    description: "bruker eier eventet",
+    mockQueries: () => {
+      (pool.query as jest.Mock)
+        .mockResolvedValueOnce({
+          rowCount: 1,
+          rows: [{ id: 1, owner_id: 1 }],
+        }) // sjekk eierskap
+        .mockResolvedValueOnce({
+          rowCount: 1,
+          rows: [{
+            id: 1,
+            name: "slingshot",
+            owner_id: 1,
+            event_date: "2025-12-01T17:00:00.000Z",
+            created_at: "2025-07-01T17:18:51.136Z",
+            is_payed: true,
+          }],
+        }) // hent event
+        .mockResolvedValueOnce({
+          rowCount: 3,
+          rows: [
+            {
+              registration_id: 2,
+              email: "123@213.no",
+              registration_date: "2025-07-05T16:39:33.436Z",
+              payment_date: null,
+              field_id: 1,
+              label: "test",
+              field_type: "select",
+              is_required: true,
+              value: "1",
+            },
+            {
+              registration_id: 2,
+              email: "123@213.no",
+              registration_date: "2025-07-05T16:39:33.436Z",
+              payment_date: null,
+              field_id: 2,
+              label: "a",
+              field_type: "text",
+              is_required: true,
+              value: "asdf",
+            },
+            {
+              registration_id: 1,
+              email: "tomel@gmail.com",
+              registration_date: "2025-07-01T17:18:51.137Z",
+              payment_date: null,
+              field_id: null,
+              label: null,
+              field_type: null,
+              is_required: null,
+              value: null,
+            },
+          ],
+        }); // hent registreringer
     },
-    {
-      email: "123@213.no",
-      registration_date: "2025-07-05T16:39:33.436Z",
-      payment_date: null,
-      fields: [
-        { label: "test", value: "1" },
-        { label: "a", value: "asdf" }
-      ]
+  },
+  {
+    description: "bruker har skrivetilgang til eventet",
+    mockQueries: () => {
+      (pool.query as jest.Mock)
+        .mockResolvedValueOnce({
+          rowCount: 0,
+          rows: [],
+        }) // ikke eier
+        .mockResolvedValueOnce({
+          rowCount: 1,
+          rows: [{
+            permission_level: "EDIT",
+          }],
+        }) // har permissions
+        .mockResolvedValueOnce({
+          rowCount: 1,
+          rows: [{
+            id: 1,
+            name: "slingshot",
+            owner_id: 1,
+            event_date: "2025-12-01T17:00:00.000Z",
+            created_at: "2025-07-01T17:18:51.136Z",
+            is_payed: true,
+          }],
+        }) // hent event
+        .mockResolvedValueOnce({
+          rowCount: 3,
+          rows: [
+            {
+              registration_id: 2,
+              email: "123@213.no",
+              registration_date: "2025-07-05T16:39:33.436Z",
+              payment_date: null,
+              field_id: 1,
+              label: "test",
+              field_type: "select",
+              is_required: true,
+              value: "1",
+            },
+            {
+              registration_id: 2,
+              email: "123@213.no",
+              registration_date: "2025-07-05T16:39:33.436Z",
+              payment_date: null,
+              field_id: 2,
+              label: "a",
+              field_type: "text",
+              is_required: true,
+              value: "asdf",
+            },
+            {
+              registration_id: 1,
+              email: "tomel@gmail.com",
+              registration_date: "2025-07-01T17:18:51.137Z",
+              payment_date: null,
+              field_id: null,
+              label: null,
+              field_type: null,
+              is_required: null,
+              value: null,
+            },
+          ],
+        }); // hent registreringer
+    },
+  },
+])("GET /event/:eventId/registrations når $description", ({ mockQueries }) => {
+  let app : Express
+
+  beforeEach(() => {
+    app = createTestApp();
+    jest.clearAllMocks(); // nullstiller antall kall og return values
+    (pool.query as jest.Mock).mockReset(); // ⚠️ nullstiller tidligere mockResolvedValueOnce-implementasjoner
+    (pool.connect as jest.Mock).mockReset();
+    mockQueries();
+  });
+
+  it("returnerer 200 og registreringer", async () => {
+
+    const res = await request(app).get("/api/events/event/123/registrations");
+
+    if (res.status !== 200) {
+     // console.log("Feil respons:", res.status, res.body);
     }
-  ]);
+    expect(res.status).toBe(200);
+    expect(res.body.event).toEqual({
+      id: 1,
+      name: "slingshot",
+      owner_id: 1,
+      event_date: "2025-12-01T17:00:00.000Z",
+      created_at: "2025-07-01T17:18:51.136Z",
+      is_payed: true,
+    });
+    expect(res.body.totalRegistrations).toBe(2);
+    expect(res.body.registrations).toEqual([
+      {
+        email: "tomel@gmail.com",
+        registration_date: "2025-07-01T17:18:51.137Z",
+        payment_date: null,
+        fields: [],
+      },
+      {
+        email: "123@213.no",
+        registration_date: "2025-07-05T16:39:33.436Z",
+        payment_date: null,
+        fields: [
+          { label: "test", value: "1" },
+          { label: "a", value: "asdf" },
+        ],
+      },
+    ]);
+  });
 });
-
-
-
 
 
 
@@ -241,13 +222,18 @@ describe("POST /api/events/", () => {
     query: jest.fn(),
     release: jest.fn(),
   };
-
+  let app: Express;
   beforeEach(() => {
-    jest.clearAllMocks();
+    app = createTestApp();
+    jest.clearAllMocks(); // nullstiller antall kall og return values
+    (pool.query as jest.Mock).mockReset(); // ⚠️ nullstiller tidligere mockResolvedValueOnce-implementasjoner
+    (pool.connect as jest.Mock).mockReset();
     (pool.connect as jest.Mock).mockResolvedValue(mockClient);
   });
+  
 
   it("should return 400 if tickets is not an array", async () => {
+    
     const res = await request(app)
       .post("/api/events/")
       .send({
@@ -259,6 +245,9 @@ describe("POST /api/events/", () => {
     expect(res.status).toBe(400);
     expect(res.body).toEqual({ error: "Tickets må være en liste hvis det oppgis" });
   });
+
+
+
 
   it("should insert event and tickets, then commit transaction", async () => {
     mockClient.query
@@ -315,14 +304,20 @@ describe("POST /api/events/", () => {
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: "Kunne ikke opprette event" });
   });
+
 });
 
 
 
 
 describe("GET /", () => {
+  let app: Express;
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.clearAllMocks(); // nullstiller antall kall og return values
+    (pool.query as jest.Mock).mockReset(); // ⚠️ nullstiller tidligere mockResolvedValueOnce-implementasjoner
+    (pool.connect as jest.Mock).mockReset();
+    app = createTestApp();
+    
   });
   
   it("henter rett data fra /event/:id", async () => {

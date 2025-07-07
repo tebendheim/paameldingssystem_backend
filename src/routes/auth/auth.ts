@@ -2,8 +2,8 @@
 import { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
 import bcrypt from "bcrypt";
-import {pool} from "../db"
-import {requireLogin} from "../middleware/auth_middleware"
+import {pool} from "../../db"
+import {requireLogin} from "../../middleware/auth_middleware"
 import crypto from "crypto"
 
 const app = Router();

@@ -27,9 +27,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/api", routes);
+app.use((req, res, next) => {
+  console.log(`Received ${req.method} request for ${req.originalUrl}`);
+  next();
+});
 
 app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+
 });
 
 export default app;

@@ -1,38 +1,96 @@
+// /api/fields/opitons
+
 import { Router } from "express";
-import { pool } from "../db";
-import { requireLogin } from "../middleware/auth_middleware";
+import { pool } from "../../db";
+import { requireLogin, requireEditAccess } from "../../middleware/auth_middleware";
 
 const router = Router();
 
 // Oppdater felt
-router.put("/:eventId/:fieldId/:optionId",requireLogin, async (req, res) => {
-  const { eventId, fieldId, optionId } = req.params;
+// router.put("/:eventId/:fieldId",requireEditAccess("event_settings"), async (req, res) => {
+//   console.log("er i rett plass")
+//   const { eventId, fieldId } = req.params;
+//   const updates = req.body;
+
+//   try {
+//     const result = await pool.query(
+//       "SELECT * FROM fields WHERE id = $1 AND event_id = $2",
+//       [fieldId, eventId]
+//     );
+//     const field = result.rows[0];
+//     if (!field) {
+//          res.status(404).json({ error: "Field not found" })
+//          return
+//     };
+
+//     const keys = Object.keys(updates);
+//     const values = Object.values(updates);
+//     const setters = keys.map((k, i) => `${k} = $${i + 1}`).join(", ");
+
+//     const updateQuery = `
+//       UPDATE fields
+//       SET ${setters}
+//       WHERE id = $${keys.length + 1}
+//       RETURNING *
+//     `;
+//     const updated = await pool.query(updateQuery, [...values, fieldId]);
+
+//     res.json(updated.rows[0]);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Database error" });
+//   }
+// });
+router.put("/:eventId/:fieldId", requireEditAccess("event_settings"), async (req, res) => {
+  console.log("er i rett rute")
+  const { eventId, fieldId } = req.params;
   const updates = req.body;
 
   try {
+    // Sjekk først om feltet finnes
     const result = await pool.query(
-      "SELECT * FROM fields WHERE id = $1 AND event_id = $2",
+      "SELECT * FROM event_field WHERE id = $1 AND event_id = $2",
       [fieldId, eventId]
     );
     const field = result.rows[0];
     if (!field) {
-         res.status(404).json({ error: "Field not found" })
-         return
-    };
+      console.log("Field not found", { fieldId, eventId, rows: result.rows });
+      res.status(404).json({ error: "Field not found" });
+      return;
+    }
 
     const keys = Object.keys(updates);
     const values = Object.values(updates);
+
+    if (keys.length === 0) {
+      res.status(400).json({ error: "Ingen data å oppdatere" });
+      return;
+    }
+
     const setters = keys.map((k, i) => `${k} = $${i + 1}`).join(", ");
 
     const updateQuery = `
-      UPDATE fields
+      UPDATE event_field
       SET ${setters}
-      WHERE id = $${keys.length + 1}
+      WHERE id = $${keys.length + 1} AND event_id = $${keys.length + 2}
       RETURNING *
     `;
-    const updated = await pool.query(updateQuery, [...values, fieldId]);
 
-    res.json(updated.rows[0]);
+    const updateResult = await pool.query(updateQuery, [...values, fieldId, eventId]);
+
+    if (updateResult.rowCount === 0) {
+      // Ingen rader ble endret (enten identiske verdier eller feil ID)
+      res.status(200).json({ updated: false, fields: null });
+      return ;
+    }
+
+    // Hvis noe faktisk ble endret, hent alle feltene på nytt
+    const allFields = await pool.query(
+      "SELECT * FROM event_field WHERE event_id = $1 ORDER BY id",
+      [eventId]
+    );
+
+    res.json({ updated: true, fields: allFields.rows });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Database error" });
@@ -113,6 +171,7 @@ console.log("kommet til slett option")
     );
     if (result.rowCount === 0) {
       // Ingen rad ble slettet - feltet finnes ikke eller event_id/fieldId matcher ikke
+      console.log("Field not found", { fieldId, optionId, rows: result.rows });
       res.status(404).json({ message: "Felt ikke funnet" });
       return
     }

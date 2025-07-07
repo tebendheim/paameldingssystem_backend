@@ -1,8 +1,10 @@
+// /src/routes/events.ts
+
 import { Router } from "express";
-import { pool } from "../db";
-import { requireLogin, requireReadAccess, requireEditAccess } from "../middleware/auth_middleware";
-import TicketRoutes from "./tickets"
-import User from "../User"
+import { pool } from "../../db";
+import { requireLogin, requireReadAccess, requireEditAccess } from "../../middleware/auth_middleware";
+import TicketRoutes from "../eventsettings/tickets"
+import User from "../../User"
 
 const router = Router();
 
@@ -36,16 +38,15 @@ router.get("/events", async (req,res) => {
 });
 
 router.get("/event/:id", async (req, res) => {
+  
     const id = req.params.id;
     try{
         const result = await pool.query("SELECT * FROM event WHERE id = $1", [id]);
 
-        // SKAL SLETTE CONSOLE
-        console.log(result)
         if (result.rows.length === 0){
             res.status(404).json({message: "Event ikke funnet"})
             return;
-        }
+        }        
         res.json(result.rows[0]);
     }catch (err){
          console.error("Feil:", err);
@@ -84,7 +85,7 @@ if (tickets && !Array.isArray(tickets)) {
     res.status(201).json({ message: "Event opprettet", eventId });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(err);
+    //console.error(err); // SKAL UNCOMMENTES I PROD
     res.status(500).json({ error: "Kunne ikke opprette event" });
   } finally {
     client.release();
